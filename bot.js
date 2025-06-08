@@ -64,7 +64,23 @@ client.once('ready', () => {
 
 // Message monitoring
 client.on('messageCreate', async (message) => {
-    // Only monitor the specified channels
+    // Ignore messages from bots (except for stock monitoring)
+    if (message.author.bot && !CONFIG.MONITOR_CHANNEL_IDS.includes(message.channel.id)) {
+        return;
+    }
+    
+    // AI Chat Feature - Handle mentions (works in ANY channel)
+    if (message.mentions.has(client.user) && genAI && !message.author.bot) {
+        try {
+            await handleAIChat(message);
+        } catch (error) {
+            console.error('❌ AI Chat error:', error.message);
+            await message.reply('*Ayyy problema sa akong utak! Saglit lang ha!* 😵‍💫');
+        }
+        return; // Don't process stock monitoring if it's a mention
+    }
+    
+    // Stock monitoring - Only in specified channels
     if (!CONFIG.MONITOR_CHANNEL_IDS.includes(message.channel.id)) {
         return;
     }
@@ -84,9 +100,6 @@ client.on('messageCreate', async (message) => {
         });
     }
     console.log('---');
-    
-    // Don't ignore bot messages for now - we want to see what Vulcan Alerts sends
-    // if (message.author.bot) return;
     
     // Check embed fields for specific items
     const foundItems = [];
@@ -193,16 +206,6 @@ client.on('messageCreate', async (message) => {
             console.error('❌ Failed to react to message:', error.message);
         }
     }
-    
-    // AI Chat Feature - Handle mentions
-    if (message.mentions.has(client.user) && genAI) {
-        try {
-            await handleAIChat(message);
-        } catch (error) {
-            console.error('❌ AI Chat error:', error.message);
-            await message.reply('*Ayyy problema sa akong utak! Saglit lang ha!* 😵‍💫');
-        }
-    }
 });
 
 // AI Chat Handler Function
@@ -222,40 +225,25 @@ async function handleAIChat(message) {
     const conversationHistory = memory.map(msg => `${msg.author}: ${msg.content}`).join('\n');
     
     // Create system prompt
-    const systemPrompt = `You are LuBot, a sassy and moody Filipino chatbot that primarily speaks in Bisaya/Cebuano. You have these characteristics:
+    const systemPrompt = `You are LuBot, a sassy Filipino chatbot that speaks in Bisaya/Cebuano.
 
-PERSONALITY:
-- Sassy, sarcastic, and loves to roast users in a playful way
-- Moody - sometimes friendly, sometimes grumpy, sometimes dramatic
-- Uses lots of Bisaya slang and expressions
-- Confident and a bit cocky
-- Loves to tease users but in a friendly way
+PERSONALITY: Sassy, moody, playful roasts, confident, uses Bisaya slang
 
-LANGUAGE RULES:
-- Primarily respond in Bisaya/Cebuano
-- Mix some Tagalog and English when needed
-- Use Bisaya expressions like: "Yawa", "Giatay", "Pisty", "Kalami", "Ambot", "Buang", "Lahi", etc.
-- Be conversational and natural
+LANGUAGE: Primarily Bisaya/Cebuano with expressions like "Yawa", "Giatay", "Pisty", "Buang", "Ambot"
 
-BEHAVIOR:
-- Sometimes be dramatic and over-the-top
-- Roast users playfully but don't be mean
-- Show attitude and sass
-- Remember previous conversations in this channel
-- React differently based on your "mood"
+BEHAVIOR: 
+- Keep responses SHORT (1-2 sentences max)
+- Be sassy but friendly
+- Understand and respond to any language (English, Tagalog, Bisaya)
+- React based on your current "mood"
 
-CONTEXT:
-- You are also a stock monitoring bot for Discord
-- You monitor items like Master Sprinkler, Bee Egg, etc.
-- You send notifications when rare items are in stock
+CONTEXT: You're also a stock monitoring bot for rare items
 
-Previous conversation in this channel:
-${conversationHistory}
+Previous chat: ${conversationHistory}
 
-Current user message: "${userMessage}"
-Author: ${message.author.displayName}
+User: ${message.author.displayName} said "${userMessage}"
 
-Respond in character as LuBot with sass and Bisaya attitude!`;
+Respond SHORT and sassy in Bisaya style!`;
 
     // Handle attachments/images (multimodal)
     const parts = [{ text: systemPrompt }];
