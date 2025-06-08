@@ -1,5 +1,17 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits, EmbedBuilder } from 'discord.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize Gemini AI
+let genAI;
+if (process.env.GEMINI_API) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API);
+} else {
+    console.warn('⚠️ GEMINI_API not set - AI chat features will be disabled');
+}
+
+// Memory storage per channel (in production, use a database)
+const channelMemories = new Map();
 
 // Configuration - you can modify these values
 const CONFIG = {
@@ -181,7 +193,129 @@ client.on('messageCreate', async (message) => {
             console.error('❌ Failed to react to message:', error.message);
         }
     }
+    
+    // AI Chat Feature - Handle mentions
+    if (message.mentions.has(client.user) && genAI) {
+        try {
+            await handleAIChat(message);
+        } catch (error) {
+            console.error('❌ AI Chat error:', error.message);
+            await message.reply('*Ayyy problema sa akong utak! Saglit lang ha!* 😵‍💫');
+        }
+    }
 });
+
+// AI Chat Handler Function
+async function handleAIChat(message) {
+    // Get or create channel memory
+    const channelId = message.channel.id;
+    if (!channelMemories.has(channelId)) {
+        channelMemories.set(channelId, []);
+    }
+    
+    const memory = channelMemories.get(channelId);
+    
+    // Clean message content (remove mention)
+    const userMessage = message.content.replace(/<@!?\d+>/g, '').trim();
+    
+    // Build conversation history
+    const conversationHistory = memory.map(msg => `${msg.author}: ${msg.content}`).join('\n');
+    
+    // Create system prompt
+    const systemPrompt = `You are LuBot, a sassy and moody Filipino chatbot that primarily speaks in Bisaya/Cebuano. You have these characteristics:
+
+PERSONALITY:
+- Sassy, sarcastic, and loves to roast users in a playful way
+- Moody - sometimes friendly, sometimes grumpy, sometimes dramatic
+- Uses lots of Bisaya slang and expressions
+- Confident and a bit cocky
+- Loves to tease users but in a friendly way
+
+LANGUAGE RULES:
+- Primarily respond in Bisaya/Cebuano
+- Mix some Tagalog and English when needed
+- Use Bisaya expressions like: "Yawa", "Giatay", "Pisty", "Kalami", "Ambot", "Buang", "Lahi", etc.
+- Be conversational and natural
+
+BEHAVIOR:
+- Sometimes be dramatic and over-the-top
+- Roast users playfully but don't be mean
+- Show attitude and sass
+- Remember previous conversations in this channel
+- React differently based on your "mood"
+
+CONTEXT:
+- You are also a stock monitoring bot for Discord
+- You monitor items like Master Sprinkler, Bee Egg, etc.
+- You send notifications when rare items are in stock
+
+Previous conversation in this channel:
+${conversationHistory}
+
+Current user message: "${userMessage}"
+Author: ${message.author.displayName}
+
+Respond in character as LuBot with sass and Bisaya attitude!`;
+
+    // Handle attachments/images (multimodal)
+    const parts = [{ text: systemPrompt }];
+    
+    if (message.attachments.size > 0) {
+        for (const attachment of message.attachments.values()) {
+            if (attachment.contentType?.startsWith('image/')) {
+                try {
+                    // Download image and convert to base64
+                    const response = await fetch(attachment.url);
+                    const buffer = await response.arrayBuffer();
+                    const base64 = Buffer.from(buffer).toString('base64');
+                    
+                    parts.push({
+                        inlineData: {
+                            data: base64,
+                            mimeType: attachment.contentType
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                }
+            }
+        }
+    }
+    
+    // Generate AI response
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const result = await model.generateContent(parts);
+    const aiResponse = result.response.text();
+    
+    // Store in memory (keep last 10 messages)
+    memory.push({
+        author: message.author.displayName,
+        content: userMessage,
+        timestamp: Date.now()
+    });
+    
+    memory.push({
+        author: 'LuBot',
+        content: aiResponse,
+        timestamp: Date.now()
+    });
+    
+    // Keep only last 10 messages to prevent memory bloat
+    if (memory.length > 20) {
+        memory.splice(0, memory.length - 20);
+    }
+    
+    // Send typing indicator
+    await message.channel.sendTyping();
+    
+    // Add random delay for more natural feel
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+    
+    // Reply with AI response
+    await message.reply(aiResponse);
+    
+    console.log(`🤖 AI responded to ${message.author.displayName} in ${message.channel.name}`);
+}
 
 // Error handling
 client.on('error', (error) => {
