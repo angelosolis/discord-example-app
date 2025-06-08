@@ -1,24 +1,22 @@
 {
-  "name": "discord-getting-started",
+  "name": "discord-seed-monitor-bot",
   "private": true,
   "version": "1.0.0",
-  "description": "Discord example app",
-  "main": "app.js",
+  "description": "Discord bot to monitor seed stock notifications",
+  "main": "bot.js",
   "type": "module",
   "engines": {
     "node": ">=18.x"
   },
   "scripts": {
-    "start": "node app.js",
-    "register": "node commands.js",
-    "dev": "nodemon app.js"
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
   },
-  "author": "Shay DeWael",
+  "author": "Angelo Solis",
   "license": "MIT",
   "dependencies": {
-    "discord-interactions": "^4.0.0",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2"
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
