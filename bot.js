@@ -175,7 +175,7 @@ client.on('messageCreate', async (message) => {
                         .setDescription(`Hey <@${userId.trim()}>! 🎉\n\n**${item}** is now available in stock!`)
                         .addFields(
                             { name: '📦 Item', value: `**${item}**`, inline: true },
-                            { name: '⏰ Time', value: new Date().toLocaleString(), inline: true },
+                            { name: '⏰ Time', value: new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }), inline: true },
                             { name: '🔥 Status', value: '**IN STOCK NOW!**', inline: true }
                         )
                         .setFooter({ text: 'Quick! Get it before it\'s gone!' })
