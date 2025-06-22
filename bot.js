@@ -23,15 +23,14 @@ const CONFIG = {
     
     // Keywords to look for in messages (specific items only)
     SEED_KEYWORDS: [
+        'sugar apple',
+        'kiwi',
+        'loquat',
+        'prickly pear',
+        'bell pepper',
         'master sprinkler',
-        'ember lily',
-        'bug egg',
-        'mythical egg',
-        'beanstalk',
-        'bee egg',
-        'hive fruit seed',
-        'honey sprinkler',
-        'nectar staff'
+        'feijoa',
+        'paradise egg'
     ],
     
     // Specific seed names to monitor (you can add more)
@@ -109,49 +108,44 @@ client.on('messageCreate', async (message) => {
             embed.fields?.forEach(field => {
                 const fieldValue = field.value.toLowerCase();
                 
+                // Check for Sugar Apple
+                if (fieldValue.includes('sugar apple')) {
+                    foundItems.push('SUGAR APPLE');
+                }
+                
+                // Check for Kiwi
+                if (fieldValue.includes('kiwi')) {
+                    foundItems.push('KIWI');
+                }
+                
+                // Check for Loquat
+                if (fieldValue.includes('loquat')) {
+                    foundItems.push('LOQUAT');
+                }
+                
+                // Check for Prickly Pear
+                if (fieldValue.includes('prickly pear')) {
+                    foundItems.push('PRICKLY PEAR');
+                }
+                
+                // Check for Bell Pepper
+                if (fieldValue.includes('bell pepper')) {
+                    foundItems.push('BELL PEPPER');
+                }
+                
                 // Check for Master Sprinkler
                 if (fieldValue.includes('master sprinkler')) {
                     foundItems.push('MASTER SPRINKLER');
                 }
                 
-                // Check for Ember Lily
-                if (fieldValue.includes('ember lily')) {
-                    foundItems.push('EMBER LILY');
+                // Check for Feijoa
+                if (fieldValue.includes('feijoa')) {
+                    foundItems.push('FEIJOA');
                 }
                 
-                // Check for Bug Egg
-                if (fieldValue.includes('bug egg')) {
-                    foundItems.push('BUG EGG');
-                }
-                
-                // Check for Mythical Egg
-                if (fieldValue.includes('mythical egg')) {
-                    foundItems.push('MYTHICAL EGG');
-                }
-                
-                // Check for Beanstalk
-                if (fieldValue.includes('beanstalk')) {
-                    foundItems.push('BEANSTALK');
-                }
-                
-                // Check for Bee Egg
-                if (fieldValue.includes('bee egg')) {
-                    foundItems.push('BEE EGG');
-                }
-                
-                // Check for Hive Fruit Seed
-                if (fieldValue.includes('hive fruit seed')) {
-                    foundItems.push('HIVE FRUIT SEED');
-                }
-                
-                // Check for Honey Sprinkler
-                if (fieldValue.includes('honey sprinkler')) {
-                    foundItems.push('HONEY SPRINKLER');
-                }
-                
-                // Check for Nectar Staff
-                if (fieldValue.includes('nectar staff')) {
-                    foundItems.push('NECTAR STAFF');
+                // Check for Paradise Egg
+                if (fieldValue.includes('paradise egg')) {
+                    foundItems.push('PARADISE EGG');
                 }
             });
         });
